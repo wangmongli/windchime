@@ -3,124 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#9ad7f0">
+<meta name="theme-color" content="#8fd0ea">
 <title>听风铃的声音 🎐</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
   body {
     font-family: "Courier New", Consolas, "PingFang SC", "Microsoft YaHei", monospace;
-    background: #9ad7f0;
+    background: #8fd0ea;
     user-select: none; touch-action: manipulation;
     position: relative; overflow: hidden;
     image-rendering: pixelated;
   }
 
-  /* 像素风天空：色带 */
-  .sky {
-    position: absolute; inset: 0; z-index: 0;
-    background: linear-gradient(180deg,
-      #7ec8e3 0% 16%,
-      #8fd2ea 16% 32%,
-      #a3ddf2 32% 50%,
-      #b9e6f6 50% 68%,
-      #d3f0fa 68% 84%,
-      #eaf9fe 84% 100%);
-  }
+  .scene { position: absolute; inset: 0; z-index: 0; }
+  #sceneSvg { width: 100%; height: 100%; display: block; }
 
-  /* 像素云 */
-  .clouds { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
-  .cloud {
-    position: absolute; height: 22px; background: #fff;
-    animation: drift linear infinite;
-  }
-  .cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; }
-  .cloud::before { width: 40%; height: 22px; top: -14px; left: 22%; }
-  .cloud::after { width: 26%; height: 16px; top: -9px; right: 14%; }
-  @keyframes drift {
-    from { transform: translateX(-45vw); }
-    to   { transform: translateX(145vw); }
-  }
-  .c1 { width: 110px; top: 12%; animation-duration: 80s; animation-delay: -25s; }
-  .c2 { width: 78px;  top: 30%; animation-duration: 105s; animation-delay: -70s; opacity: .92; }
-  .c3 { width: 130px; top: 56%; animation-duration: 120s; animation-delay: -95s; opacity: .8; }
-  .c4 { width: 62px;  top: 44%; animation-duration: 95s; animation-delay: -40s; opacity: .85; }
-
-  /* 标题 */
-  .title {
-    position: absolute; top: calc(18px + env(safe-area-inset-top)); left: 0; right: 0;
-    text-align: center; z-index: 5;
-    font-size: clamp(17px, 4.6vw, 24px); font-weight: 700; letter-spacing: 6px;
-    color: #2b5b6e;
-    text-shadow: 3px 3px 0 rgba(255,255,255,.7);
-  }
-
-  /* 风铃 */
-  .chime-wrap {
-    position: absolute; left: 50%; top: 14%;
-    transform: translateX(-50%);
-    z-index: 3;
-    width: min(240px, 58vw);
-    pointer-events: auto;
-  }
-  #chime {
-    transform-origin: 50% 0;
+  /* 风铃摆动（绕顶部悬挂点） */
+  #chimeGroup {
+    transform-box: view-box;
+    transform-origin: 100px 16px;
     animation: sway 6.5s ease-in-out infinite;
-    will-change: transform;
   }
   @keyframes sway {
-    0%, 100% { transform: rotate(-3.2deg); }
-    50%      { transform: rotate(3.2deg); }
+    0%, 100% { transform: rotate(-2.6deg); }
+    50%      { transform: rotate(2.6deg); }
   }
-  #chime.ring { animation: ring 1.9s cubic-bezier(.22,1,.36,1); }
+  #chimeGroup.ring { animation: ring 1.9s cubic-bezier(.22,1,.36,1); }
   @keyframes ring {
     0%   { transform: rotate(0deg); }
-    12%  { transform: rotate(14deg); }
-    30%  { transform: rotate(-12deg); }
-    50%  { transform: rotate(9deg); }
-    70%  { transform: rotate(-6deg); }
-    88%  { transform: rotate(3deg); }
+    12%  { transform: rotate(13deg); }
+    30%  { transform: rotate(-11deg); }
+    50%  { transform: rotate(8deg); }
+    70%  { transform: rotate(-5deg); }
+    88%  { transform: rotate(2.5deg); }
     100% { transform: rotate(0deg); }
   }
-  #chimeSvg { display: block; width: 100%; height: auto; }
+
+  /* 地上影子随摆动轻微移动 */
+  #chimeShadow {
+    transform-box: view-box;
+    transform-origin: 118px 236px;
+    animation: swayShadow 6.5s ease-in-out infinite;
+  }
+  @keyframes swayShadow {
+    0%, 100% { transform: translateX(4px); }
+    50%      { transform: translateX(-4px); }
+  }
+
+  .title {
+    position: absolute; top: calc(16px + env(safe-area-inset-top)); left: 0; right: 0;
+    text-align: center; z-index: 5;
+    font-size: clamp(16px, 4.4vw, 23px); font-weight: 700; letter-spacing: 6px;
+    color: #ffffff;
+    text-shadow: 3px 3px 0 rgba(43,91,110,.55);
+  }
 
   .hint {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    top: calc(14% + min(240px, 58vw) * 1.28);
+    position: absolute; left: 50%; top: 72%; transform: translateX(-50%);
     z-index: 4; white-space: nowrap;
     font-size: 13px; color: #2b5b6e; letter-spacing: 2px;
-    background: rgba(255,255,255,.55); padding: 6px 14px;
+    background: rgba(255,255,255,.62); padding: 7px 16px;
     border: 2px solid rgba(43,91,110,.35);
-    opacity: .95;
+    box-shadow: 2px 2px 0 rgba(43,91,110,.22);
     animation: hintFade 3s ease-in-out infinite;
   }
-  @keyframes hintFade { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  @keyframes hintFade { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
 
-  /* 音符 */
   .note {
     position: absolute; z-index: 6; pointer-events: none;
     font-size: 20px; color: #ffffff; font-weight: 700;
     text-shadow: 2px 2px 0 rgba(43,91,110,.35);
   }
 
-  /* 声音按钮 */
   .sound-btn {
     position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 16px;
     z-index: 8; width: 46px; height: 46px; cursor: pointer;
-    background: rgba(255,255,255,.72);
+    background: rgba(255,255,255,.78);
     border: 3px solid #2b5b6e; color: #2b5b6e;
     font-size: 20px; line-height: 1;
     box-shadow: 3px 3px 0 rgba(43,91,110,.35);
-    transform: translateY(0);
     transition: transform .1s ease;
   }
   .sound-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 rgba(43,91,110,.35); }
 
-  /* 进入遮罩 */
   .overlay {
     position: absolute; inset: 0; z-index: 20;
     display: flex; align-items: center; justify-content: center; padding: 24px;
-    background: linear-gradient(180deg, #7ec8e3 0%, #a3ddf2 50%, #dcf3fb 100%);
+    background: linear-gradient(180deg, #7ec8e3 0%, #a3ddf2 55%, #e6f6fc 100%);
     transition: opacity .5s ease, visibility .5s ease;
   }
   .overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -128,15 +98,14 @@
   .o-icon { font-size: 58px; animation: swayIcon 3s ease-in-out infinite; }
   @keyframes swayIcon { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
   .o-title {
-    margin-top: 16px; font-size: clamp(22px, 6vw, 30px); font-weight: 800; letter-spacing: 4px;
+    margin-top: 16px; font-size: clamp(21px, 5.8vw, 29px); font-weight: 800; letter-spacing: 4px;
     color: #23505f; text-shadow: 3px 3px 0 #ffffff;
   }
   .o-sub { margin-top: 12px; font-size: 14px; line-height: 1.9; color: #3b6b7c; letter-spacing: 1px; }
   .o-btn {
-    margin-top: 26px; cursor: pointer;
-    font-family: inherit; font-size: 17px; font-weight: 800; letter-spacing: 4px;
-    color: #ffffff; background: #2b5b6e;
-    border: none; padding: 14px 46px;
+    margin-top: 26px; cursor: pointer; font-family: inherit;
+    font-size: 17px; font-weight: 800; letter-spacing: 4px;
+    color: #ffffff; background: #2b5b6e; border: none; padding: 14px 46px;
     box-shadow: 4px 4px 0 #173a47;
     transition: transform .1s ease, box-shadow .1s ease;
   }
@@ -144,106 +113,194 @@
 </style>
 </head>
 <body>
-  <div class="sky"></div>
-  <div class="clouds">
-    <div class="cloud c1"></div>
-    <div class="cloud c2"></div>
-    <div class="cloud c3"></div>
-    <div class="cloud c4"></div>
+  <div class="scene">
+    <svg id="sceneSvg" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+      <g id="bgLayer"></g>
+      <g id="chimeShadow"></g>
+      <g id="chimeGroup"></g>
+    </svg>
   </div>
 
   <div class="title">听风铃的声音</div>
-
-  <div class="chime-wrap" id="chimeWrap">
-    <div id="chime">
-      <svg id="chimeSvg" viewBox="0 0 100 122" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"></svg>
-    </div>
-  </div>
-
   <div class="hint" id="hint">点一下风铃，听它响</div>
-
   <button class="sound-btn" id="soundBtn" aria-label="声音开关">🔊</button>
 
   <div class="overlay" id="overlay">
     <div class="overlay-card">
       <div class="o-icon">🎐</div>
       <div class="o-title">听风铃的声音</div>
-      <div class="o-sub">风吹过的时候，风铃会轻轻响起<br>点一下风铃，听它为你响一声</div>
+      <div class="o-sub">风从木廊吹过<br>风铃会轻轻响起</div>
       <button class="o-btn" id="startBtn">进 入</button>
     </div>
   </div>
 
 <script>
 (function () {
-  var chimeSvg = document.getElementById('chimeSvg');
-  var chime = document.getElementById('chime');
-  var chimeWrap = document.getElementById('chimeWrap');
+  var bgLayer = document.getElementById('bgLayer');
+  var chimeShadow = document.getElementById('chimeShadow');
+  var chimeGroup = document.getElementById('chimeGroup');
   var soundBtn = document.getElementById('soundBtn');
   var overlay = document.getElementById('overlay');
   var startBtn = document.getElementById('startBtn');
   var hint = document.getElementById('hint');
 
-  /* ---------------- 像素绘制 ---------------- */
+  /* ---------- 像素绘制工具 ---------- */
   function R(x, y, w, h, fill) {
     return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + fill + '"/>';
   }
-  function circlePixels(cx, cy, r, fill, px) {
+  function ellipsePixels(cx, cy, rx, ry, fill, px) {
     px = px || 2;
     var s = '';
-    for (var y = -r; y <= r; y += px) {
-      for (var x = -r; x <= r; x += px) {
-        if (x * x + y * y <= r * r) s += R(cx + x, cy + y, px, px, fill);
+    for (var y = -ry; y <= ry; y += px) {
+      for (var x = -rx; x <= rx; x += px) {
+        if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) s += R(cx + x, cy + y, px, px, fill);
       }
     }
     return s;
   }
+  function pixelCloud(cx, cy, w, h, color) {
+    var s = '';
+    s += R(cx, cy, w, h, color);
+    s += R(cx + Math.round(w * 0.16), cy - Math.round(h * 0.7), Math.round(w * 0.46), Math.round(h * 0.8), color);
+    s += R(cx + Math.round(w * 0.56), cy - Math.round(h * 0.4), Math.round(w * 0.28), Math.round(h * 0.55), color);
+    return s;
+  }
+  function pixelPlant(x, y) {
+    var s = '';
+    // 花盆
+    s += R(x - 8, y, 16, 10, '#b4633a');
+    s += R(x - 9, y - 2, 18, 3, '#c8704a');
+    // 叶子
+    s += R(x - 2, y - 18, 4, 16, '#3f8a3f');
+    s += R(x - 10, y - 14, 8, 6, '#4fa04f');
+    s += R(x + 2, y - 10, 8, 6, '#4fa04f');
+    s += R(x - 8, y - 20, 6, 6, '#59b259');
+    return s;
+  }
 
+  /* ---------- 背景场景 ---------- */
+  function buildScene() {
+    var s = '';
+    var HORIZON = 88;
+
+    s += '<defs>' +
+      '<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#4fa8d4"/>' +
+        '<stop offset="0.55" stop-color="#86cde8"/>' +
+        '<stop offset="1" stop-color="#cdeefb"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#c99563"/>' +
+        '<stop offset="1" stop-color="#a2713f"/>' +
+      '</linearGradient>' +
+      '</defs>';
+
+    // 天空
+    s += '<rect x="0" y="0" width="200" height="' + HORIZON + '" fill="url(#sky)"/>';
+
+    // 太阳
+    s += ellipsePixels(160, 30, 13, 13, '#fff6c8', 3);
+    s += ellipsePixels(160, 30, 8, 8, '#fffbe6', 3);
+
+    // 云
+    s += pixelCloud(26, 26, 40, 11, '#ffffff');
+    s += pixelCloud(120, 44, 34, 10, '#f4fbff');
+    s += pixelCloud(70, 14, 26, 8, '#eaf7ff');
+
+    // 飞鸟
+    s += R(44, 60, 2, 2, '#4a7a8c') + R(46, 58, 2, 2, '#4a7a8c') + R(48, 60, 2, 2, '#4a7a8c');
+    s += R(56, 66, 2, 2, '#4a7a8c') + R(58, 64, 2, 2, '#4a7a8c') + R(60, 66, 2, 2, '#4a7a8c');
+
+    // 栏杆横杆
+    s += R(0, HORIZON - 9, 200, 5, '#7a4e2c');
+    s += R(0, HORIZON - 4, 200, 2, '#6b4526');
+    // 栏杆立柱
+    for (var px = 6; px < 200; px += 26) {
+      s += R(px, HORIZON - 4, 4, 14, '#8a5a34');
+    }
+
+    // 木地板（透视）
+    s += '<rect x="0" y="' + HORIZON + '" width="200" height="' + (300 - HORIZON) + '" fill="url(#wood)"/>';
+
+    // 放射状木板缝（消失点在上方中央）
+    for (var bx = -380; bx <= 580; bx += 44) {
+      s += '<line x1="100" y1="' + HORIZON + '" x2="' + bx + '" y2="300" stroke="#8a5f3a" stroke-width="1.5"/>';
+    }
+    // 横向拼缝（近疏远密）
+    var seams = [92, 100, 112, 128, 150, 180, 220, 270];
+    for (var i = 0; i < seams.length; i++) {
+      s += '<line x1="0" y1="' + seams[i] + '" x2="200" y2="' + seams[i] + '" stroke="#8a5f3a" stroke-width="1"/>';
+    }
+    // 几块深色木纹
+    s += R(24, 150, 40, 2, '#9a6a42');
+    s += R(140, 196, 46, 2, '#9a6a42');
+    s += R(70, 246, 54, 2, '#9a6a42');
+
+    // 顶部吊梁
+    s += R(0, 0, 200, 14, '#8a5a34');
+    s += R(0, 11, 200, 3, '#6f4526');
+    s += '<line x1="0" y1="5" x2="200" y2="5" stroke="#7a4e2c" stroke-width="1"/>';
+    s += '<line x1="0" y1="8" x2="200" y2="8" stroke="#7a4e2c" stroke-width="1"/>';
+
+    // 角落小盆栽
+    s += pixelPlant(20, 258);
+    s += pixelPlant(180, 276);
+
+    return s;
+  }
+
+  /* ---------- 风铃 ---------- */
   function buildChime() {
     var s = '';
-
-    // 顶部挂钩
-    s += R(47, 2, 6, 2, '#5c5c5c');
-    s += R(45, 4, 10, 2, '#5c5c5c');
-    s += R(45, 6, 2, 2, '#5c5c5c');
-    s += R(53, 6, 2, 2, '#5c5c5c');
+    var CX = 100;
 
     // 吊绳
-    s += R(49, 8, 2, 30, '#6b6b6b');
+    s += R(CX - 1, 14, 2, 80, '#6b6b6b');
+    // 顶部小环
+    s += R(CX - 3, 90, 6, 6, '#9a9a9a');
+    s += R(CX - 1, 92, 2, 2, '#ffffff');
 
-    // 铃铛（两层像素圆做光影）
-    s += circlePixels(50, 58, 22, '#dcdcd6', 2);   // 底色（暗）
-    s += circlePixels(48.5, 55.5, 19, '#f7f7f2', 2); // 亮面
-
-    // 高光
-    s += R(38, 46, 6, 4, '#ffffff');
-    s += R(36, 50, 4, 6, '#ffffff');
+    // 铃铛（扁椭圆，俯视）
+    s += ellipsePixels(CX, 120, 30, 26, '#d6d6cf', 2);   // 底（暗）
+    s += ellipsePixels(CX - 1, 117, 26, 22, '#f7f7f2', 2); // 亮面
+    // 顶部受光高光
+    s += ellipsePixels(CX - 9, 106, 10, 7, '#ffffff', 2);
+    // 底部阴影
+    s += ellipsePixels(CX + 6, 134, 16, 6, '#c9c9c2', 2);
 
     // 眼睛
-    s += R(42, 52, 4, 6, '#2e2e2e');
-    s += R(54, 52, 4, 6, '#2e2e2e');
+    s += R(CX - 13, 114, 5, 7, '#2e2e2e');
+    s += R(CX + 8, 114, 5, 7, '#2e2e2e');
+    // 嘴（ω）
+    s += R(CX - 7, 128, 3, 3, '#2e2e2e');
+    s += R(CX - 4, 131, 8, 3, '#2e2e2e');
+    s += R(CX + 4, 128, 3, 3, '#2e2e2e');
 
-    // 嘴巴（ω 形）
-    s += R(45, 62, 2, 2, '#2e2e2e');
-    s += R(47, 64, 2, 2, '#2e2e2e');
-    s += R(49, 64, 2, 2, '#2e2e2e');
-    s += R(51, 64, 2, 2, '#2e2e2e');
-    s += R(53, 62, 2, 2, '#2e2e2e');
-
-    // 铃铛下方的小绳
-    s += R(49, 78, 2, 10, '#6b6b6b');
+    // 下方小绳
+    s += R(CX - 1, 146, 2, 10, '#6b6b6b');
 
     // 挂牌
-    s += R(40, 88, 20, 28, '#5a5a5a');
-    s += R(42, 90, 16, 24, '#8f8f8f');
-    s += R(45, 94, 10, 2, '#efefef');
-    s += R(45, 99, 8, 2, '#efefef');
-    s += R(45, 104, 10, 2, '#efefef');
+    s += R(CX - 13, 156, 26, 34, '#5a5a5a');
+    s += R(CX - 11, 158, 22, 30, '#909090');
+    s += R(CX - 8, 164, 16, 3, '#efefef');
+    s += R(CX - 8, 171, 12, 3, '#efefef');
+    s += R(CX - 8, 178, 16, 3, '#efefef');
 
-    chimeSvg.innerHTML = s;
+    return s;
   }
-  buildChime();
 
-  /* ---------------- 声音 ---------------- */
+  function buildShadow() {
+    var s = '';
+    s += '<ellipse cx="118" cy="236" rx="36" ry="12" fill="rgba(60,35,15,0.22)"/>';
+    s += '<ellipse cx="118" cy="234" rx="26" ry="8" fill="rgba(60,35,15,0.14)"/>';
+    return s;
+  }
+
+  bgLayer.innerHTML = buildScene();
+  chimeShadow.innerHTML = buildShadow();
+  chimeGroup.innerHTML = buildChime();
+
+  /* ---------- 声音 ---------- */
   var actx = null, master = null, muted = false;
   var NOTES = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66];
 
@@ -253,10 +310,10 @@
     if (!AC) return;
     actx = new AC();
     master = actx.createGain();
-    master.gain.value = muted ? 0 : 0.32;
+    master.gain.value = muted ? 0.0001 : 0.32;
     master.connect(actx.destination);
 
-    // 风声：白噪声 + 低通 + 缓慢起伏
+    // 风声
     var len = Math.floor(actx.sampleRate * 2);
     var buf = actx.createBuffer(1, len, actx.sampleRate);
     var data = buf.getChannelData(0);
@@ -333,24 +390,12 @@
   function ringSound() {
     if (!actx) return;
     var t = actx.currentTime;
-    var seq = [523.25, 659.25, 783.99, 1046.50];
-    seq.forEach(function (f, i) {
+    [523.25, 659.25, 783.99, 1046.50].forEach(function (f, i) {
       tone(f, t + i * 0.11, 2.6, 0.13 - i * 0.015);
     });
   }
 
-  /* ---------------- 交互 ---------------- */
-  function ring() {
-    if (!actx) return;
-    if (actx.state === 'suspended') actx.resume();
-    ringSound();
-    chime.classList.remove('ring');
-    void chime.offsetWidth;
-    chime.classList.add('ring');
-    floatNotes();
-    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
-  }
-
+  /* ---------- 交互 ---------- */
   function floatNotes() {
     for (var i = 0; i < 4; i++) {
       (function () {
@@ -373,11 +418,22 @@
     }
   }
 
-  chime.addEventListener('animationend', function (e) {
-    if (e.animationName === 'ring') chime.classList.remove('ring');
+  function ring() {
+    if (!actx) return;
+    if (actx.state === 'suspended') actx.resume();
+    ringSound();
+    chimeGroup.classList.remove('ring');
+    void chimeGroup.getBoundingClientRect();
+    chimeGroup.classList.add('ring');
+    floatNotes();
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
+  }
+
+  chimeGroup.addEventListener('animationend', function (e) {
+    if (e.animationName === 'ring') chimeGroup.classList.remove('ring');
   });
 
-  chimeWrap.addEventListener('pointerdown', function (e) {
+  document.getElementById('sceneSvg').addEventListener('pointerdown', function (e) {
     e.preventDefault();
     initAudio();
     ring();
@@ -401,8 +457,6 @@
     soundBtn.textContent = muted ? '🔇' : '🔊';
     if (!muted && !ambientTimer) ambientLoop();
   });
-
-  window.addEventListener('resize', function () {});
 })();
 </script>
 </body>
