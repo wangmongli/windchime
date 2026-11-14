@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#9ad7f0">
+<title>听风铃的声音 🎐</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Courier New", Consolas, "PingFang SC", "Microsoft YaHei", monospace;
+    background: #9ad7f0;
+    user-select: none; touch-action: manipulation;
+    position: relative; overflow: hidden;
+    image-rendering: pixelated;
+  }
+
+  /* 像素风天空：色带 */
+  .sky {
+    position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(180deg,
+      #7ec8e3 0% 16%,
+      #8fd2ea 16% 32%,
+      #a3ddf2 32% 50%,
+      #b9e6f6 50% 68%,
+      #d3f0fa 68% 84%,
+      #eaf9fe 84% 100%);
+  }
+
+  /* 像素云 */
+  .clouds { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+  .cloud {
+    position: absolute; height: 22px; background: #fff;
+    animation: drift linear infinite;
+  }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; }
+  .cloud::before { width: 40%; height: 22px; top: -14px; left: 22%; }
+  .cloud::after { width: 26%; height: 16px; top: -9px; right: 14%; }
+  @keyframes drift {
+    from { transform: translateX(-45vw); }
+    to   { transform: translateX(145vw); }
+  }
+  .c1 { width: 110px; top: 12%; animation-duration: 80s; animation-delay: -25s; }
+  .c2 { width: 78px;  top: 30%; animation-duration: 105s; animation-delay: -70s; opacity: .92; }
+  .c3 { width: 130px; top: 56%; animation-duration: 120s; animation-delay: -95s; opacity: .8; }
+  .c4 { width: 62px;  top: 44%; animation-duration: 95s; animation-delay: -40s; opacity: .85; }
+
+  /* 标题 */
+  .title {
+    position: absolute; top: calc(18px + env(safe-area-inset-top)); left: 0; right: 0;
+    text-align: center; z-index: 5;
+    font-size: clamp(17px, 4.6vw, 24px); font-weight: 700; letter-spacing: 6px;
+    color: #2b5b6e;
+    text-shadow: 3px 3px 0 rgba(255,255,255,.7);
+  }
+
+  /* 风铃 */
+  .chime-wrap {
+    position: absolute; left: 50%; top: 14%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: min(240px, 58vw);
+    pointer-events: auto;
+  }
+  #chime {
+    transform-origin: 50% 0;
+    animation: sway 6.5s ease-in-out infinite;
+    will-change: transform;
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3.2deg); }
+    50%      { transform: rotate(3.2deg); }
+  }
+  #chime.ring { animation: ring 1.9s cubic-bezier(.22,1,.36,1); }
+  @keyframes ring {
+    0%   { transform: rotate(0deg); }
+    12%  { transform: rotate(14deg); }
+    30%  { transform: rotate(-12deg); }
+    50%  { transform: rotate(9deg); }
+    70%  { transform: rotate(-6deg); }
+    88%  { transform: rotate(3deg); }
+    100% { transform: rotate(0deg); }
+  }
+  #chimeSvg { display: block; width: 100%; height: auto; }
+
+  .hint {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    top: calc(14% + min(240px, 58vw) * 1.28);
+    z-index: 4; white-space: nowrap;
+    font-size: 13px; color: #2b5b6e; letter-spacing: 2px;
+    background: rgba(255,255,255,.55); padding: 6px 14px;
+    border: 2px solid rgba(43,91,110,.35);
+    opacity: .95;
+    animation: hintFade 3s ease-in-out infinite;
+  }
+  @keyframes hintFade { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+  /* 音符 */
+  .note {
+    position: absolute; z-index: 6; pointer-events: none;
+    font-size: 20px; color: #ffffff; font-weight: 700;
+    text-shadow: 2px 2px 0 rgba(43,91,110,.35);
+  }
+
+  /* 声音按钮 */
+  .sound-btn {
+    position: absolute; top: calc(16px + env(safe-area-inset-top)); right: 16px;
+    z-index: 8; width: 46px; height: 46px; cursor: pointer;
+    background: rgba(255,255,255,.72);
+    border: 3px solid #2b5b6e; color: #2b5b6e;
+    font-size: 20px; line-height: 1;
+    box-shadow: 3px 3px 0 rgba(43,91,110,.35);
+    transform: translateY(0);
+    transition: transform .1s ease;
+  }
+  .sound-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 rgba(43,91,110,.35); }
+
+  /* 进入遮罩 */
+  .overlay {
+    position: absolute; inset: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    background: linear-gradient(180deg, #7ec8e3 0%, #a3ddf2 50%, #dcf3fb 100%);
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+  .overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .overlay-card { text-align: center; max-width: 320px; }
+  .o-icon { font-size: 58px; animation: swayIcon 3s ease-in-out infinite; }
+  @keyframes swayIcon { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  .o-title {
+    margin-top: 16px; font-size: clamp(22px, 6vw, 30px); font-weight: 800; letter-spacing: 4px;
+    color: #23505f; text-shadow: 3px 3px 0 #ffffff;
+  }
+  .o-sub { margin-top: 12px; font-size: 14px; line-height: 1.9; color: #3b6b7c; letter-spacing: 1px; }
+  .o-btn {
+    margin-top: 26px; cursor: pointer;
+    font-family: inherit; font-size: 17px; font-weight: 800; letter-spacing: 4px;
+    color: #ffffff; background: #2b5b6e;
+    border: none; padding: 14px 46px;
+    box-shadow: 4px 4px 0 #173a47;
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .o-btn:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 #173a47; }
+</style>
+</head>
+<body>
+  <div class="sky"></div>
+  <div class="clouds">
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+    <div class="cloud c4"></div>
+  </div>
+
+  <div class="title">听风铃的声音</div>
+
+  <div class="chime-wrap" id="chimeWrap">
+    <div id="chime">
+      <svg id="chimeSvg" viewBox="0 0 100 122" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+  <div class="hint" id="hint">点一下风铃，听它响</div>
+
+  <button class="sound-btn" id="soundBtn" aria-label="声音开关">🔊</button>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-card">
+      <div class="o-icon">🎐</div>
+      <div class="o-title">听风铃的声音</div>
+      <div class="o-sub">风吹过的时候，风铃会轻轻响起<br>点一下风铃，听它为你响一声</div>
+      <button class="o-btn" id="startBtn">进 入</button>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var chimeSvg = document.getElementById('chimeSvg');
+  var chime = document.getElementById('chime');
+  var chimeWrap = document.getElementById('chimeWrap');
+  var soundBtn = document.getElementById('soundBtn');
+  var overlay = document.getElementById('overlay');
+  var startBtn = document.getElementById('startBtn');
+  var hint = document.getElementById('hint');
+
+  /* ---------------- 像素绘制 ---------------- */
+  function R(x, y, w, h, fill) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + fill + '"/>';
+  }
+  function circlePixels(cx, cy, r, fill, px) {
+    px = px || 2;
+    var s = '';
+    for (var y = -r; y <= r; y += px) {
+      for (var x = -r; x <= r; x += px) {
+        if (x * x + y * y <= r * r) s += R(cx + x, cy + y, px, px, fill);
+      }
+    }
+    return s;
+  }
+
+  function buildChime() {
+    var s = '';
+
+    // 顶部挂钩
+    s += R(47, 2, 6, 2, '#5c5c5c');
+    s += R(45, 4, 10, 2, '#5c5c5c');
+    s += R(45, 6, 2, 2, '#5c5c5c');
+    s += R(53, 6, 2, 2, '#5c5c5c');
+
+    // 吊绳
+    s += R(49, 8, 2, 30, '#6b6b6b');
+
+    // 铃铛（两层像素圆做光影）
+    s += circlePixels(50, 58, 22, '#dcdcd6', 2);   // 底色（暗）
+    s += circlePixels(48.5, 55.5, 19, '#f7f7f2', 2); // 亮面
+
+    // 高光
+    s += R(38, 46, 6, 4, '#ffffff');
+    s += R(36, 50, 4, 6, '#ffffff');
+
+    // 眼睛
+    s += R(42, 52, 4, 6, '#2e2e2e');
+    s += R(54, 52, 4, 6, '#2e2e2e');
+
+    // 嘴巴（ω 形）
+    s += R(45, 62, 2, 2, '#2e2e2e');
+    s += R(47, 64, 2, 2, '#2e2e2e');
+    s += R(49, 64, 2, 2, '#2e2e2e');
+    s += R(51, 64, 2, 2, '#2e2e2e');
+    s += R(53, 62, 2, 2, '#2e2e2e');
+
+    // 铃铛下方的小绳
+    s += R(49, 78, 2, 10, '#6b6b6b');
+
+    // 挂牌
+    s += R(40, 88, 20, 28, '#5a5a5a');
+    s += R(42, 90, 16, 24, '#8f8f8f');
+    s += R(45, 94, 10, 2, '#efefef');
+    s += R(45, 99, 8, 2, '#efefef');
+    s += R(45, 104, 10, 2, '#efefef');
+
+    chimeSvg.innerHTML = s;
+  }
+  buildChime();
+
+  /* ---------------- 声音 ---------------- */
+  var actx = null, master = null, muted = false;
+  var NOTES = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66];
+
+  function initAudio() {
+    if (actx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    actx = new AC();
+    master = actx.createGain();
+    master.gain.value = muted ? 0 : 0.32;
+    master.connect(actx.destination);
+
+    // 风声：白噪声 + 低通 + 缓慢起伏
+    var len = Math.floor(actx.sampleRate * 2);
+    var buf = actx.createBuffer(1, len, actx.sampleRate);
+    var data = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    var noise = actx.createBufferSource();
+    noise.buffer = buf; noise.loop = true;
+    var lp = actx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 520; lp.Q.value = 0.7;
+    var windGain = actx.createGain();
+    windGain.gain.value = 0.05;
+    noise.connect(lp); lp.connect(windGain); windGain.connect(master);
+
+    var lfo = actx.createOscillator();
+    lfo.frequency.value = 0.07;
+    var lfoGain = actx.createGain();
+    lfoGain.gain.value = 0.032;
+    lfo.connect(lfoGain); lfoGain.connect(windGain.gain);
+    lfo.start();
+    noise.start();
+
+    // 柔和低频铺底
+    [130.81, 196.00].forEach(function (f) {
+      var o = actx.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = f;
+      var g = actx.createGain();
+      g.gain.value = 0.010;
+      o.connect(g); g.connect(master);
+      o.start();
+    });
+  }
+
+  function tone(freq, when, dur, vol) {
+    if (!actx) return;
+    when = when || actx.currentTime;
+    dur = dur || 2.4;
+    vol = (vol == null) ? 0.16 : vol;
+
+    var o = actx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = freq;
+
+    var o2 = actx.createOscillator();
+    o2.type = 'triangle';
+    o2.frequency.value = freq * 2.01;
+
+    var g2 = actx.createGain();
+    g2.gain.value = 0.16;
+
+    var g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(vol, when + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+
+    o.connect(g);
+    o2.connect(g2); g2.connect(g);
+    g.connect(master);
+
+    o.start(when); o.stop(when + dur + 0.1);
+    o2.start(when); o2.stop(when + dur + 0.1);
+  }
+
+  var ambientTimer = null;
+  function ambientLoop() {
+    if (!actx) return;
+    var n = NOTES[Math.floor(Math.random() * 5)];
+    tone(n, actx.currentTime, 2.8, 0.09);
+    if (Math.random() < 0.45) {
+      tone(NOTES[Math.floor(Math.random() * NOTES.length)], actx.currentTime + 0.42, 2.8, 0.06);
+    }
+    ambientTimer = setTimeout(ambientLoop, 4200 + Math.random() * 5200);
+  }
+
+  function ringSound() {
+    if (!actx) return;
+    var t = actx.currentTime;
+    var seq = [523.25, 659.25, 783.99, 1046.50];
+    seq.forEach(function (f, i) {
+      tone(f, t + i * 0.11, 2.6, 0.13 - i * 0.015);
+    });
+  }
+
+  /* ---------------- 交互 ---------------- */
+  function ring() {
+    if (!actx) return;
+    if (actx.state === 'suspended') actx.resume();
+    ringSound();
+    chime.classList.remove('ring');
+    void chime.offsetWidth;
+    chime.classList.add('ring');
+    floatNotes();
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
+  }
+
+  function floatNotes() {
+    for (var i = 0; i < 4; i++) {
+      (function () {
+        var d = document.createElement('div');
+        d.className = 'note';
+        d.textContent = ['♪', '♫', '♬'][Math.floor(Math.random() * 3)];
+        d.style.left = (44 + Math.random() * 12) + '%';
+        d.style.top = '38%';
+        d.style.fontSize = (16 + Math.random() * 10) + 'px';
+        document.body.appendChild(d);
+        var dx = (Math.random() * 2 - 1) * 70;
+        d.animate([
+          { transform: 'translate(-50%, 0) scale(.7)', opacity: 0 },
+          { transform: 'translate(-50%, -26px) scale(1)', opacity: 1, offset: 0.2 },
+          { transform: 'translate(calc(-50% + ' + dx + 'px), -150px) scale(.9)', opacity: 0 }
+        ], { duration: 2000 + Math.random() * 900, easing: 'ease-out' })
+         .onfinish = function () { d.remove(); };
+        setTimeout(function () { d.remove(); }, 3200);
+      })();
+    }
+  }
+
+  chime.addEventListener('animationend', function (e) {
+    if (e.animationName === 'ring') chime.classList.remove('ring');
+  });
+
+  chimeWrap.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    initAudio();
+    ring();
+  });
+
+  startBtn.addEventListener('click', function () {
+    overlay.classList.add('hidden');
+    initAudio();
+    if (actx && actx.state === 'suspended') actx.resume();
+    ambientLoop();
+    if (hint) setTimeout(function () { hint.style.display = 'none'; }, 6000);
+  });
+
+  soundBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    initAudio();
+    if (!actx) return;
+    if (actx.state === 'suspended') actx.resume();
+    muted = !muted;
+    master.gain.setTargetAtTime(muted ? 0.0001 : 0.32, actx.currentTime, 0.15);
+    soundBtn.textContent = muted ? '🔇' : '🔊';
+    if (!muted && !ambientTimer) ambientLoop();
+  });
+
+  window.addEventListener('resize', function () {});
+})();
+</script>
+</body>
+</html>
